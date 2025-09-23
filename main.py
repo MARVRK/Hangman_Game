@@ -45,18 +45,19 @@ try:
                 terminal = select_random_difficulty()
             word, hint = select_random_word(terminal)
             print(f"Difficulty chose {terminal}")
-            print(f"Guess the word: {hint}")
+            print(f"Guess word: {hint}")
             print(f"Amount of guess left: {amount_to_guess[terminal] - counter}")
-
+            output = ["_"] * len(word)
             while True:
                 if string_storage != word:
                     if amount_to_guess[terminal] - counter != 0:
                         guess_word = input().lower()
                         if guess_word in word:
                             for number, letter in enumerate(word):
-                                if letter is guess_word:
-                                    string_storage[number] = letter
+                                if letter == guess_word:
+                                    output[number] = letter
                             string_storage += guess_word
+                            print(output)
                             print(string_storage)
                             print(f"Correct letter: {guess_word}")
                             print(f"Amount of guess words left: {amount_to_guess[terminal] - counter}")
