@@ -16,17 +16,17 @@ print(greetings_tab)
 # progress_tab = []
 ############################ Support functions ######################################
 def select_random_word(difficulty: str) -> tuple[str, str]:
-    storage = {}
-    for key, value in words_to_guess.items():
-        if difficulty == key:
-            for nested_key, nested_value in value.items():
-                storage[nested_key] = nested_value
-    hint, word = random.choice(list(storage.items()))
+    level = words_to_guess.get(difficulty)
+    if level is None:
+        raise ValueError("Invalid difficulty level")
+
+    word = random.choice(list(level.keys()))
+    hint = level[word]
+
     return hint, word
 
 def select_random_difficulty() -> str:
-    difficulties = ["easy", "medium", "hard"]
-    return random.choice(difficulties)
+    return random.choice(list(amount_to_guess.keys()))
 
 
 ############################ Core Logic of Game ######################################
