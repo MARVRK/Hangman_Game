@@ -3,7 +3,7 @@ import random
 ############################ Storage of arrays ######################################
 words_to_guess = {"easy": {"blazing": "rust", "superman": "famous comics hero"},
                   "medium": {"digital": "signal is analog or ....", "iqos": "smoke"},
-                  "hard": {"iphone": "apple", "python": "so slow"}}
+                  "hard": {"iphone": "apple", "so slow": "python"}}
 
 amount_to_guess = {"easy": 5, "medium": 3, "hard": 2}
 counter = 0
