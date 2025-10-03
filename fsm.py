@@ -1,4 +1,3 @@
-from ast import literal_eval
 from dataclasses import dataclass
 from enum import auto, Enum
 import random
@@ -6,8 +5,6 @@ import random
 words_to_guess = {"easy": {"blazing": "rust", "superman": "famous comics hero"},
                   "medium": {"digital": "signal is analog or ....", "iqos": "smoke"},
                   "hard": {"iphone": "apple", "python": "so slow"}}
-
-
 @dataclass
 class PlayerData:
     player_name: str
@@ -61,7 +58,7 @@ class GameManager:
     level: DifficultLevel
     counter = 0
     string_storage = ""
-    message = []
+    output = list[str] | None
 
     def start_game(self):
         if self.state == GameState.IDLE:
@@ -71,30 +68,35 @@ class GameManager:
             self.player.tries_left = self.level.value
             self.player.selected_word = random.choice(list(level.keys()))
             self.player.hint = level[self.player.selected_word]
+            self.output = ["_"] * len(self.player.selected_word)
             self.state = GameState.PLAYING
-
         else:
             raise ValueError("Start Game starts from IDLE")
 
-    # move main logic from main to FSM.py
-    # message use one or list messages to rise prints
     def guess_word(self, word: str):
         if self.state == GameState.PLAYING:
-            if self.player.tries_left - self.counter -1 != 0:
-                if word in self.player.selected_word:
-                    message = f"Amount of guess words left: {self.player.tries_left - self.counter}"
-                    return message
+            if self.string_storage != self.player.selected_word:
+                if self.counter < self.player.tries_left:
+                    if word in self.player.selected_word:
+                        for number, letter in enumerate(self.player.selected_word):
+                            if letter == word:
+                                self.output[number] = word
+                        self.string_storage += word
+                        return f"Amount of guess words left: {self.player.tries_left - self.counter}", self.output
+                    else:
+                        self.counter += 1
+                        return f"Amount of guess words left: {self.player.tries_left - self.counter}", self.output
                 else:
-                    self.counter += 1
-                    message = f"Amount of guess words left: {self.player.tries_left - self.counter}"
-                    return message
+                    self.state = GameState.LOST
+                    if self.player.scores > 0:
+                        self.player.scores -= 1
+                    return "Sorry, you lost"
             else:
-                message = "Sorry you lost"
-                self.state = GameState.LOST
-                return message
+                self.state = GameState.WON
+                self.player.scores += 1
+                return "You won!"
         else:
             raise ValueError("Guess word should have state PLAYING")
-
 
     def results(self):
         if self.player.scores >= 5:
@@ -103,36 +105,40 @@ class GameManager:
             self.player.level = 2
         if self.player.scores >= 10:
             self.player.level = 3
-        return self.player.scores, self.player.level, self.player.player_name
+        return (f"Name:{self.player.player_name} "
+                f"Your Score:{self.player.scores} "
+                f"Your level:{self.player.level}")
 
 
 if __name__ == "__main__":
     print("Launching game in playing state")
     print("Welcome to the hangman game!")
-    menus_tab = "Please select event "
 
     game = GameManager(PlayerData(player_name=input("Please provide name: ").strip()),
-                        state=GameState.IDLE,
-                        level=DifficultLevel.from_string(
-                            input("Please select level easy, medium or hard: ").strip().lower()))
+                       state=GameState.IDLE,
+                       level=DifficultLevel.from_string(
+                           input("Please select level easy, medium or hard: ").strip().lower()))
     game.start_game()
     print(f"Game Started, guess word |{game.player.hint}| or type 'exit' to quite ")
 
 while True:
 
     user_input = input().strip().lower()
-
-    if user_input == "exit" :
+    if user_input == "exit":
         print("shutting down the game...")
         break
     try:
         result = game.guess_word(user_input)
-        print(result)
+        if game.state == GameState.PLAYING:
+            print(result)
         if game.state == GameState.LOST:
+            print(result)
+            print(game.results())
             break
-        elif game.state == GameState.WON:
+        if game.state == GameState.WON:
+            print(result)
+            print(game.results())
             break
-
 
     except KeyboardInterrupt:
         raise "Program Interrupted"
