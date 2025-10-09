@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 import random
 
-words_to_guess = {"easy": {"blazing": "rust", "superman": "famous comics hero"},
-                  "medium": {"digital": "signal is analog or ....", "iqos": "smoke"},
-                  "hard": {"iphone": "apple", "python": "so slow"}}
+
 @dataclass
 class PlayerData:
     player_name: str
@@ -50,6 +48,19 @@ class DifficultLevel(Enum):
             case self.HARD:
                 return "hard"
 
+
+@dataclass
+class WordsToGuess:
+    hint: str
+    word: str
+
+
+WORDS_TO_GUESS = {DifficultLevel.EASY: [WordsToGuess(word="blazing", hint="rust"),
+                                        WordsToGuess(word="superman", hint="famous comics hero")],
+                  DifficultLevel.MEDIUM: [WordsToGuess(word="digital", hint="signal is analog or ...."),
+                                          WordsToGuess(word="iqos", hint="smoke")],
+                  DifficultLevel.HARD: [WordsToGuess(word="iphone",hint= "apple"),
+                                        WordsToGuess(word="python",hint="so slow")]}
 
 @dataclass
 class GameManager:
