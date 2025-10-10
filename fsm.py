@@ -124,7 +124,7 @@ class GameManager:
 if __name__ == "__main__":
     print("Launching game in playing state")
     print("Welcome to the hangman game!")
-
+wwwwww
     game = GameManager(PlayerData(player_name=input("Please provide name: ").strip()),
                        state=GameState.IDLE,
                        level=DifficultLevel.from_string(
