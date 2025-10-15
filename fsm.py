@@ -1,6 +1,8 @@
+import uuid
 from dataclasses import dataclass
 from enum import auto, Enum
 import random
+from uuid import UUID
 
 
 @dataclass
@@ -21,7 +23,7 @@ class GameState(Enum):
     LOST = auto()
 
 
-class DifficultLevel(Enum):
+class Difficulty(Enum):
     EASY = 5
     MEDIUM = 3
     HARD = 2
@@ -46,21 +48,21 @@ class WordsToGuess:
     word: str
 
 
-WORDS_TO_GUESS = {DifficultLevel.EASY: [WordsToGuess(word="blazing", hint="rust"),
-                                        WordsToGuess(word="superman", hint="famous comics hero")],
-                  DifficultLevel.MEDIUM: [WordsToGuess(word="digital", hint="signal is analog or ...."),
-                                          WordsToGuess(word="iqos", hint="smoke")],
-                  DifficultLevel.HARD: [WordsToGuess(word="iphone", hint="apple"),
-                                        WordsToGuess(word="python", hint="so slow")]}
+WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
+                                    WordsToGuess(word="superman", hint="famous comics hero")],
+                  Difficulty.MEDIUM: [WordsToGuess(word="digital", hint="signal is analog or ...."),
+                                      WordsToGuess(word="iqos", hint="smoke")],
+                  Difficulty.HARD: [WordsToGuess(word="iphone", hint="apple"),
+                                    WordsToGuess(word="python", hint="so slow")]}
 
 
 @dataclass
 class GameManager:
+    id = uuid.uuid4()
     player: PlayerData
     state: GameState
-    level: DifficultLevel
+    level: Difficulty
     counter = 0
-    string_storage = ""
     output = list[str] | None
 
     def start_game(self):
@@ -69,9 +71,9 @@ class GameManager:
             level = WORDS_TO_GUESS.get(self.level)
 
             self.player.tries_left = self.level.value
-            random_generator = random.choice(level)
-            self.player.selected_word = random_generator.word
-            self.player.hint = random_generator.hint
+            random_word = random.choice(level)
+            self.player.selected_word = random_word.word
+            self.player.hint = random_word.hint
             self.output = ["_"] * len(self.player.selected_word)
             self.state = GameState.PLAYING
         else:
@@ -85,16 +87,15 @@ class GameManager:
             for number, letter in enumerate(self.player.selected_word):
                 if letter == word:
                     self.output[number] = word
-            self.string_storage += word
         else:
             self.counter += 1
 
-        if self.string_storage == self.player.selected_word:
+        if "_" not in self.output :
             self.state = GameState.WON
             self.player.scores += 1
             return "You won!"
 
-        if self.counter > self.player.tries_left:
+        if self.counter >= self.player.tries_left:
             self.state = GameState.LOST
             if self.player.scores > 0:
                 self.player.scores -= 1
@@ -112,37 +113,3 @@ class GameManager:
         return (f"Name:{self.player.player_name} "
                 f"Your Score:{self.player.scores} "
                 f"Your level:{self.player.level}")
-
-
-if __name__ == "__main__":
-    print("Launching game in playing state")
-    print("Welcome to the hangman game!")
-
-game = GameManager(PlayerData(player_name=input("Please provide name: ").strip()),
-                   state=GameState.IDLE,
-                   level=DifficultLevel.from_string(
-                   input("Please select level easy, medium or hard: ").strip().lower()))
-game.start_game()
-print(f"Game Started, guess word |{game.player.hint}| or type 'exit' to quite ")
-
-while True:
-
-    user_input = input().strip().lower()
-    if user_input == "exit":
-        print("shutting down the game...")
-        break
-    try:
-        result = game.guess_word(user_input)
-        if game.state == GameState.PLAYING:
-            print(result)
-        if game.state == GameState.LOST:
-            print(result)
-            print(game.results())
-            break
-        if game.state == GameState.WON:
-            print(result)
-            print(game.results())
-            break
-
-    except KeyboardInterrupt:
-        raise "Program Interrupted"
