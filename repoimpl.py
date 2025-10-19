@@ -15,16 +15,14 @@ class DataBase:
 
     def create_game_table(self):
         try:
-            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Game( 
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Games( 
+                            id TEXT,
                             player_id INTEGER,
                             guessed_word TEXT,
-                            game_id BLOB,
-                            games_won INTEGER,
-                            games_lost INTEGER,
+                            difficulty_level TEXT,
+                            tries_spend INTEGER,
                             FOREIGN KEY (player_id) references Player(id))
                                 ''')
-
             self.conn.commit()
         except Exception as e:
             print(e)
@@ -40,8 +38,28 @@ class DataBase:
         except Exception as e:
             print(e)
 
+    def store_data(self, data):
+        game, uuid = data[0], data[1]
+        name = game.player.player_name
+        selected_word = game.player.selected_word
+        print(game,uuid)
+        try:
+            self.cursor.execute('''INSERT INTO Player(player_name)
+            VALUES (?)''', (name,))
+
+            self.cursor.execute('''INSERT INTO Games(id,player_id,guessed_word)
+            VALUES (?,?,?)''', (str(uuid),self.cursor.lastrowid, selected_word))
+
+
+
+            self.conn.commit()
+        except Exception as e:
+            print(e)
 
 cp = DataBase()
 
-print(cp.create_player_table())
-print(cp.create_game_table())
+# print(cp.create_player_table())
+# print(cp.create_game_table())
+cp.store_data(data=game_engine())
+
+

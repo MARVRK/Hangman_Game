@@ -1,13 +1,14 @@
+import uuid
+
 from fsm import GameManager, PlayerData, GameState, Difficulty
 
-def game_engine() -> GameManager:
+def game_engine() -> tuple[GameManager, GameManager.id]:
     print("Launching game in playing state")
     print("Welcome to the hangman game!")
-
     game = GameManager(PlayerData(player_name=input("Please provide name: ").strip()),
                        state=GameState.IDLE,
                        level=Difficulty.from_string(
-                           input("Please select level easy, medium or hard: ").strip().lower()))
+                       input("Please select level easy, medium or hard: ").strip().lower()))
     game.start_game()
     print(f"Game Started, guess word |{game.player.hint}| or type 'exit' to quite ")
 
@@ -33,4 +34,4 @@ def game_engine() -> GameManager:
         except KeyboardInterrupt:
             raise "Program Interrupted"
 
-    return game
+    return game, game.id
