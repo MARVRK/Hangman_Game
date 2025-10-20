@@ -56,6 +56,22 @@ class DataBase:
         except Exception as e:
             print(e)
 
+    def save_user(self, id):
+        try:
+            self.cursor.execute('''SELECT TABLE Player(
+                        id )''')
+
+    def get_user(self, id):
+        try:
+            self.cursor.execute('''SELECT TABLE Player(
+                        id )''')
+
+    def save_user(self, id):
+        try:
+            self.cursor.execute('''SELECT TABLE Player(
+                        id )''')
+
+
 cp = DataBase()
 
 # print(cp.create_player_table())
