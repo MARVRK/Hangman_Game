@@ -19,13 +19,15 @@ class DataBase:
                             id TEXT,
                             player_id INTEGER,
                             guessed_word TEXT,
+                            hint TEXT,
                             difficulty_level TEXT,
-                            tries_spend INTEGER,
+                            tries_left INTEGER,
+                            last_state TEXT,
                             FOREIGN KEY (player_id) references Player(id))
                                 ''')
             self.conn.commit()
         except Exception as e:
-            print(e)
+            raise f"Error type: {e}"
 
     def create_player_table(self):
         try:
@@ -36,46 +38,39 @@ class DataBase:
 
             self.conn.commit()
         except Exception as e:
-            print(e)
+            raise f"Error type: {e}"
 
-    def store_data(self, data):
-        game, uuid = data[0], data[1]
-        name = game.player.player_name
-        selected_word = game.player.selected_word
-        print(game,uuid)
+    def store_name(self, data):
+        name = data[0].player.player_name
         try:
             self.cursor.execute('''INSERT INTO Player(player_name)
             VALUES (?)''', (name,))
 
-            self.cursor.execute('''INSERT INTO Games(id,player_id,guessed_word)
-            VALUES (?,?,?)''', (str(uuid),self.cursor.lastrowid, selected_word))
-
-
-
             self.conn.commit()
         except Exception as e:
-            print(e)
+            raise f"Error type: {e}"
 
-    def save_user(self, id):
-        try:
-            self.cursor.execute('''SELECT TABLE Player(
-                        id )''')
-
-    def get_user(self, id):
-        try:
-            self.cursor.execute('''SELECT TABLE Player(
-                        id )''')
-
-    def save_user(self, id):
-        try:
-            self.cursor.execute('''SELECT TABLE Player(
-                        id )''')
-
+    def store_game(self, data):
+        print(data)
+        game, uuid = data[0], data[1]
+        word_to_guess = game.player.selected_word
+        hint = game.player.hint
+        difficulty_level = game.level
+        tries_left = game.player.tries_lef
+        last_state = game.state.GameState
+        print(last_state, difficulty_level)
+        #
+        # try:
+        #     self.cursor.execute(''' INSERT INTO ''')
+        #
+        #     self.conn.commit()
+        # except Exception as e:
+        #     raise f"Error type: {e}"
 
 cp = DataBase()
 
 # print(cp.create_player_table())
 # print(cp.create_game_table())
-cp.store_data(data=game_engine())
-
+# cp.store_name(data=game_engine())
+cp.store_game(data=game_engine())
 
