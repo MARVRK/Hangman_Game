@@ -33,4 +33,4 @@ def game_engine() -> GameManager:
         except KeyboardInterrupt:
             raise "Program Interrupted"
 
-    return game
+    return game, game.id

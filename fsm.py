@@ -8,7 +8,6 @@ import random
 @dataclass
 class PlayerData:
     player_name: str
-
     scores: int = 0
     level: int = 0
     selected_word: str = ""
@@ -59,7 +58,7 @@ WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
 @dataclass
 class GameManager:
     id = uuid.uuid4()
-    player: PlayerData
+    player = 1
     state: GameState
     level: Difficulty
     counter = 0
