@@ -1,5 +1,9 @@
 import sqlite3
+import uuid
+
 from cli import game_engine
+from fsm import GameManager
+
 
 class DataBase:
     def __init__(self):
@@ -26,8 +30,8 @@ class DataBase:
                             FOREIGN KEY (player_id) references Player(id))
                                 ''')
             self.conn.commit()
-        except Exception as e:
-            raise f"Error type: {e}"
+        except BaseException as e:
+            raise e
 
     def create_player_table(self):
         try:
@@ -37,8 +41,8 @@ class DataBase:
                                    )''')
 
             self.conn.commit()
-        except Exception as e:
-            raise f"Error type: {e}"
+        except BaseException as e:
+            raise e
 
     def store_name(self, name):
         try:
@@ -47,8 +51,8 @@ class DataBase:
 
             self.conn.commit()
             return self.cursor.lastrowid
-        except Exception as e:
-            raise f"Error type: {e}"
+        except BaseException as e:
+            raise e
 
     def store_game(self, data):
         game, uuid = data[0], data[1]
@@ -76,8 +80,8 @@ class DataBase:
                                             tries_left,
                                             last_state))
             self.conn.commit()
-        except Exception as e:
-            raise f"Error type: {e}"
+        except BaseException as e:
+            raise e
 
 
     def get_name(self, id):
@@ -89,26 +93,27 @@ class DataBase:
             for values in data:
                 return values[1]
             self.cursor.close()
-        except Exception as e:
-            raise f"Error type: {e}"
+        except BaseException as e:
+            raise e
 
-    def get_game(self, uuid):
+    def get_game(self, game_id: uuid.UUID)-> GameManager | None:
        try:
            data = self.cursor.execute('''SELECT * From Games
-                                             WHERE id = ? ''',(uuid,))
+                                             WHERE id = ? ''',(game_id,))
            for values in data:
-               return values[1:]
+               return GameManager(state=values[6], level=values[4])
            self.cursor.close()
-       except Exception as e:
-           raise f"Error type: {e}"
+       except BaseException as e:
+           raise e
 
 
-# cp = DataBase()
+cp = DataBase()
 
 # print(cp.create_player_table())
 # print(cp.create_game_table())
 # cp.store_name(data=game_engine())
 # cp.store_game(data=game_engine())
 # print(cp.get_name(1))
-# print(cp.get_game("b98f2da5-d357-4ba0-a44a-a83eba677859"))
+print(cp.get_game("b98f2da5-d357-4ba0-a44a-a83eba677859"))
 
+('b98f2da5-d357-4ba0-a44a-a83eba677859', None, 'python', 'so slow', 'HARD', 2, 'LOST')
