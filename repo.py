@@ -2,7 +2,7 @@ import uuid
 from abc import ABC, abstractmethod
 from fsm import GameManager
 from repoimpl import DataBase
-
+from fsm import Player
 
 db = DataBase()
 
@@ -18,11 +18,11 @@ class FSMAbstraction(ABC):
 
 class PlayerAbstraction(ABC):
     @abstractmethod
-    def get_player(self, player_id: GameManager):
+    def get_player(self, player_id: GameManager)->Player:
         pass
 
     @abstractmethod
-    def save_player(self, player_name: str ):
+    def save_player(self, player_name: str )-> Player:
         pass
 
 
@@ -45,12 +45,8 @@ class PlayerRepository(PlayerAbstraction):
     def get_player(self, player_id: int):
         request = db.get_name(player_id)
         if request:
-            return {"player found": f"{request}"}
+            return request
         return {"message": "no player found"}
 
     def save_player(self, player_name):
-        try:
-            request = db.store_name(player_name)
-            return {f"player saved successfully with ID: {request}"}
-        except Exception as e:
-            raise e
+        return db.store_name(player_name)

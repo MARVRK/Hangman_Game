@@ -4,15 +4,10 @@ from enum import auto, Enum
 import random
 
 
-
 @dataclass
-class PlayerData:
+class Player:
+    id: int
     player_name: str
-    scores: int = 0
-    level: int = 0
-    selected_word: str = ""
-    hint: str = ""
-    tries_left: int = 0
 
 
 class GameState(Enum):
@@ -58,22 +53,25 @@ WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
 @dataclass
 class GameManager:
     id = uuid.uuid4()
-    player = 1
+    player_id = 1
     state: GameState
     level: Difficulty
     counter = 0
     output = list[str] | None
+    selected_word: str = ""
+    hint: str = ""
+    tries_left: int = 0
 
     def start_game(self):
         if self.state == GameState.IDLE:
             # Initialize level what user typed
             level = WORDS_TO_GUESS.get(self.level)
 
-            self.player.tries_left = self.level.value
+            self.tries_left = self.level.value
             random_word = random.choice(level)
-            self.player.selected_word = random_word.word
-            self.player.hint = random_word.hint
-            self.output = ["_"] * len(self.player.selected_word)
+            self.selected_word = random_word.word
+            self.hint = random_word.hint
+            self.output = ["_"] * len(self.selected_word)
             self.state = GameState.PLAYING
         else:
             raise ValueError("Start Game starts from IDLE")
@@ -82,36 +80,22 @@ class GameManager:
         if self.state != GameState.PLAYING:
             raise ValueError("Guess word should have state PLAYING")
 
-        if word in self.player.selected_word:
-            for number, letter in enumerate(self.player.selected_word):
+        if word in self.selected_word:
+            for number, letter in enumerate(self.selected_word):
                 if letter == word:
                     self.output[number] = word
         else:
             self.counter += 1
 
-        if "_" not in self.output :
+        if "_" not in self.output:
             self.state = GameState.WON
-            self.player.scores += 1
+            # self.player.scores += 1
             return "You won!"
 
-        if self.counter >= self.player.tries_left:
+        if self.counter >= self.tries_left:
             self.state = GameState.LOST
-            if self.player.scores > 0:
-                self.player.scores -= 1
+            # if self.player.scores > 0:
+            #     self.player.scores -= 1
             return "Sorry, you lost"
 
-        return f"Amount of guess words left: {self.player.tries_left - self.counter}", self.output
-
-    def results(self):
-        if self.player.scores >= 5:
-            self.player.level = 1
-        if self.player.scores >= 8:
-            self.player.level = 2
-        if self.player.scores >= 10:
-            self.player.level = 3
-        return (f"Name:{self.player.player_name} "
-                f"Your Score:{self.player.scores} "
-                f"Your level:{self.player.level}")
-
-
-
+        return f"Amount of guess words left: {self.tries_left - self.counter}"

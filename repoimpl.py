@@ -1,8 +1,7 @@
 import sqlite3
 import uuid
-
-from cli import game_engine
 from fsm import GameManager
+
 
 
 class DataBase:
@@ -45,21 +44,29 @@ class DataBase:
             raise e
 
     def store_name(self, name):
-        try:
-            self.cursor.execute('''INSERT INTO Player(player_name)
-            VALUES (?)''', (name,))
+        self.cursor.execute('''SELECT player_name FROM Player
+                                            WHERE player_name = ?''', (name,))
+        db_check_name = self.cursor.fetchone()
 
-            self.conn.commit()
-            return self.cursor.lastrowid
-        except BaseException as e:
-            raise e
+        if db_check_name is None:
+
+            try:
+                self.cursor.execute('''INSERT INTO Player(player_name)
+                VALUES (?)''', (name,))
+
+                self.conn.commit()
+                return self.cursor.lastrowid
+            except BaseException as e:
+                raise e
+        else:
+            return None
 
     def store_game(self, data):
         game, uuid = data[0], data[1]
-        word_to_guess = game.player.selected_word
-        hint = game.player.hint
+        word_to_guess = game.selected_word
+        hint = game.hint
         difficulty_level = game.level.name
-        tries_left = game.player.tries_left
+        tries_left = game.tries_left
         last_state = game.state.name
 
         try:
@@ -86,10 +93,8 @@ class DataBase:
 
     def get_name(self, id):
         try:
-            data = self.cursor.execute('''  
-                                       SELECT id, player_name FROM Player   
+            data = self.cursor.execute('''SELECT id, player_name FROM Player   
                                        WHERE id = ?''',(id,))
-
             for values in data:
                 return values[1]
             self.cursor.close()
@@ -106,7 +111,6 @@ class DataBase:
        except BaseException as e:
            raise e
 
-
 cp = DataBase()
 
 # print(cp.create_player_table())
@@ -114,6 +118,8 @@ cp = DataBase()
 # cp.store_name(data=game_engine())
 # cp.store_game(data=game_engine())
 # print(cp.get_name(1))
-print(cp.get_game("b98f2da5-d357-4ba0-a44a-a83eba677859"))
+# print(cp.get_game("b98f2da5-d357-4ba0-a44a-a83eba677859"))
+#
+# ('b98f2da5-d357-4ba0-a44a-a83eba677859', None, 'python', 'so slow', 'HARD', 2, 'LOST')
 
-('b98f2da5-d357-4ba0-a44a-a83eba677859', None, 'python', 'so slow', 'HARD', 2, 'LOST')
+print(cp.store_name("Kevin"))

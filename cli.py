@@ -1,15 +1,34 @@
-from fsm import GameManager, PlayerData, GameState, Difficulty
+from fsm import GameManager, GameState, Difficulty
+from repo import PlayerRepository
 
-def game_engine() -> GameManager:
-    print("Launching game in playing state")
+
+def game_core() -> GameManager:
+    player_repo = PlayerRepository()
+
     print("Welcome to the hangman game!")
+    init_launch = input("Select Option:\n1.Create Name\n2.Use Name by Id\n").strip()
 
-    game = GameManager(PlayerData(player_name=input("Please provide name: ").strip()),
-                       state=GameState.IDLE,
+    if init_launch == "1":
+        name = input("please provide your name:").strip()
+        new_player = player_repo.save_player(name)
+        if new_player:
+            print(f"Your name {name} has been created with ID {new_player}")
+        else:
+            raise ValueError(f"Typed Name {name} already Exists")
+
+    elif init_launch == "2":
+        repo_id= int(input("please provide you ID:").strip())
+        repo_name = player_repo.get_player(repo_id)
+        if repo_name is not None:
+            print(f"Welcome back {repo_name}")
+        else:
+            raise ValueError(f"Not found id {repo_id} in DB")
+
+    game = GameManager(state=GameState.IDLE,
                        level=Difficulty.from_string(
                            input("Please select level easy, medium or hard: ").strip().lower()))
     game.start_game()
-    print(f"Game Started, guess word |{game.player.hint}| or type 'exit' to quite ")
+    print(f"Game Started, guess word |{game.hint}| or type 'exit' to quite ")
 
     while True:
 
@@ -23,14 +42,16 @@ def game_engine() -> GameManager:
                 print(result)
             if game.state == GameState.LOST:
                 print(result)
-                print(game.results())
+                # print(game.results())
                 break
             if game.state == GameState.WON:
                 print(result)
-                print(game.results())
+                # print(game.results())
                 break
 
         except KeyboardInterrupt:
             raise "Program Interrupted"
 
     return game, game.id
+
+game_core()
