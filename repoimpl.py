@@ -98,11 +98,11 @@ class DataBase:
 
     def get_game(self, game_id: uuid.UUID)-> GameManager | None:
        try:
-           data = self.cursor.execute('''SELECT * From Games
+           self.cursor.execute('''SELECT * From Games
                                              WHERE id = ? ''',(game_id,))
-           for values in data:
-               return GameManager(state=values[6], level=values[4])
+           export = self.cursor.fetchone()
            self.cursor.close()
+           return GameManager(state=export[6], level=export[4])
        except BaseException as e:
            raise e
 
