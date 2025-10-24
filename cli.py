@@ -19,7 +19,7 @@ def game_core() -> GameManager:
     elif init_launch == "2":
         repo_id= int(input("please provide you ID:").strip())
         repo_name = player_repo.get_player(repo_id)
-        if repo_name is not None:
+        if repo_name:
             print(f"Welcome back {repo_name}")
         else:
             raise ValueError(f"Not found id {repo_id} in DB")

@@ -1,3 +1,4 @@
+import sqlite3
 import uuid
 from abc import ABC, abstractmethod
 from fsm import GameManager
@@ -27,6 +28,9 @@ class PlayerAbstraction(ABC):
 
 
 class GameRepository(FSMAbstraction):
+    def __init__(self):
+        self.conn = sqlite3.connect(database="gamerepo.db")
+
     def get_fsm(self, fsm_id: uuid.UUID):
         request = db.get_game(game_id=fsm_id)
         if request:
@@ -42,11 +46,11 @@ class GameRepository(FSMAbstraction):
 
 
 class PlayerRepository(PlayerAbstraction):
-    def get_player(self, player_id: int):
-        request = db.get_name(player_id)
-        if request:
-            return request
-        return {"message": "no player found"}
+    def __init__(self):
+        self.conn = sqlite3.connect(database="gamerepo.db")
 
-    def save_player(self, player_name):
+    def get_player(self, player_id: int):
+        return db.get_name(player_id)
+
+    def save_player(self, player_name: str):
         return db.store_name(player_name)

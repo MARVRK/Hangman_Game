@@ -45,11 +45,10 @@ class DataBase:
 
     def store_name(self, name):
         self.cursor.execute('''SELECT player_name FROM Player
-                                            WHERE player_name = ?''', (name,))
+                                   WHERE player_name = ?''', (name,))
         db_check_name = self.cursor.fetchone()
 
         if db_check_name is None:
-
             try:
                 self.cursor.execute('''INSERT INTO Player(player_name)
                 VALUES (?)''', (name,))
@@ -94,7 +93,7 @@ class DataBase:
     def get_name(self, id):
         try:
             data = self.cursor.execute('''SELECT id, player_name FROM Player   
-                                       WHERE id = ?''',(id,))
+                                              WHERE id = ?''',(id,))
             for values in data:
                 return values[1]
             self.cursor.close()
