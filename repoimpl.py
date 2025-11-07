@@ -1,6 +1,5 @@
 import sqlite3
-import uuid
-from fsm import GameManager
+from fsm import GameManager, Player
 
 
 
@@ -16,34 +15,34 @@ class DataBase:
         except Exception as e:
             raise f"Database faced an error: {e}"
 
-    def create_game_table(self):
-        try:
-            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Games( 
-                            id TEXT,
-                            player_id INTEGER,
-                            guessed_word TEXT,
-                            hint TEXT,
-                            difficulty_level TEXT,
-                            tries_left INTEGER,
-                            last_state TEXT,
-                            FOREIGN KEY (player_id) references Player(id))
-                                ''')
-            self.conn.commit()
-        except BaseException as e:
-            raise e
+    # def create_game_table(self):
+    #     try:
+    #         self.cursor.execute('''CREATE TABLE IF NOT EXISTS Games(
+    #                         id TEXT PRIMARY KEY ,
+    #                         player_id INTEGER,
+    #                         guessed_word TEXT,
+    #                         hint TEXT,
+    #                         difficulty_level TEXT,
+    #                         tries_left INTEGER,
+    #                         last_state TEXT,
+    #                         FOREIGN KEY (player_id) references Player(id))
+    #                             ''')
+    #         self.conn.commit()
+    #     except BaseException as e:
+    #         raise e
+    #
+    # def create_player_table(self):
+    #     try:
+    #         self.cursor.execute('''CREATE TABLE IF NOT EXISTS Player(
+    #                             id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #                             player_name TEXT
+    #                                )''')
+    #
+    #         self.conn.commit()
+    #     except BaseException as e:
+    #         raise e
 
-    def create_player_table(self):
-        try:
-            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Player(
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                player_name TEXT
-                                   )''')
-
-            self.conn.commit()
-        except BaseException as e:
-            raise e
-
-    def store_name(self, name):
+    def save_name(self, name):
         self.cursor.execute('''SELECT player_name FROM Player
                                    WHERE player_name = ?''', (name,))
         db_check_name = self.cursor.fetchone()
@@ -54,22 +53,37 @@ class DataBase:
                 VALUES (?)''', (name,))
 
                 self.conn.commit()
-                return self.cursor.lastrowid
+                return Player(id=self.cursor.lastrowid, player_name=name)
             except BaseException as e:
                 raise e
         else:
             return None
 
-    def store_game(self, data):
-        game, uuid = data[0], data[1]
-        word_to_guess = game.selected_word
-        hint = game.hint
-        difficulty_level = game.level.name
-        tries_left = game.tries_left
-        last_state = game.state.name
+    def get_name(self, id) -> Player | None:
+        try:
+            data = self.cursor.execute('''SELECT id, player_name FROM Player   
+                                           WHERE id = ?''',(id,))
+            if data:
+                for value in data:
+                    return Player(id=value[0], player_name=value[1])
+            else:
+                self.cursor.close()
+                return None
+        except BaseException as e:
+            raise e
+
+    def save_game(self, data, old_game_id):
+        id = data.id
+        player_id = data.player_id
+        word_to_guess = data.selected_word
+        hint = data.hint
+        difficulty_level = data.level.name
+        tries_left = data.tries_left
+        last_state = data.state.name
 
         try:
-            self.cursor.execute(''' INSERT INTO Games(
+            if old_game_id is None:
+                self.cursor.execute(''' INSERT INTO Games(
                                 id,
                                 player_id,
                                 guessed_word,
@@ -78,47 +92,65 @@ class DataBase:
                                 tries_left,
                                 last_state
                                 ) VALUES (?,?,?,?,?,?,?)''',
-                                 (str(uuid),
-                                            self.cursor.lastrowid,
+                                 (str(id),
+                                            player_id,
                                             word_to_guess,
                                             hint,
                                             difficulty_level,
                                             tries_left,
                                             last_state))
-            self.conn.commit()
+                self.conn.commit()
+            else:
+                self.cursor.execute('''INSERT INTO Games(id,
+                                      player_id,
+                                      guessed_word,
+                                      hint,
+                                      difficulty_level,
+                                      tries_left,
+                                      last_state)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id)
+                    DO UPDATE SET
+                        player_id = EXCLUDED.player_id,
+                        guessed_word = EXCLUDED.guessed_word,
+                        hint = EXCLUDED.hint,
+                        difficulty_level = EXCLUDED.difficulty_level,
+                        tries_left = EXCLUDED.tries_left,
+                        last_state = EXCLUDED.last_state;
+              ''', (old_game_id,
+                              player_id,
+                              word_to_guess,
+                              hint,
+                              difficulty_level,
+                              tries_left,
+                              last_state))
+
+                self.conn.commit()
         except BaseException as e:
             raise e
 
-
-    def get_name(self, id):
-        try:
-            data = self.cursor.execute('''SELECT id, player_name FROM Player   
-                                              WHERE id = ?''',(id,))
-            for values in data:
-                return values[1]
-            self.cursor.close()
-        except BaseException as e:
-            raise e
-
-    def get_game(self, game_id: uuid.UUID)-> GameManager | None:
+    def get_game(self, game_id: str)-> GameManager | None:
        try:
            self.cursor.execute('''SELECT * From Games
                                              WHERE id = ? ''',(game_id,))
            export = self.cursor.fetchone()
-           self.cursor.close()
-           return GameManager(state=export[6], level=export[4])
+           if export is not None:
+               return GameManager(game_id=export[0],
+                                  player_id=export[1],
+                                  hint=export[3],
+                                  selected_word=export[2],
+                                  level=export[4],
+                                  state=export[6],
+                                  tries_left=export[5])
+           else:
+               self.cursor.close()
+               return None
        except BaseException as e:
            raise e
 
 cp = DataBase()
+# cp.create_game_table()
+# cp.create_player_table()
+# print(cp.get_name(id=1))
+# print(cp.get_game(game_id="b98f2da5-d357-4ba0-a44a-a83eba677859"))
 
-# print(cp.create_player_table())
-# print(cp.create_game_table())
-# cp.store_name(data=game_engine())
-# cp.store_game(data=game_engine())
-# print(cp.get_name(1))
-# print(cp.get_game("b98f2da5-d357-4ba0-a44a-a83eba677859"))
-#
-# ('b98f2da5-d357-4ba0-a44a-a83eba677859', None, 'python', 'so slow', 'HARD', 2, 'LOST')
-
-print(cp.store_name("Kevin"))

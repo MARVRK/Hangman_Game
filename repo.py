@@ -1,6 +1,7 @@
 import sqlite3
-import uuid
 from abc import ABC, abstractmethod
+from typing import Union
+
 from fsm import GameManager
 from repoimpl import DataBase
 from fsm import Player
@@ -9,21 +10,21 @@ db = DataBase()
 
 class FSMAbstraction(ABC):
     @abstractmethod
-    def get_fsm(self, fsm_id: uuid.UUID):
+    def get_fsm(self, fsm_id: str) -> GameManager:
         pass
 
     @abstractmethod
-    def save_fsm(self, game: GameManager):
+    def save_fsm(self, game: GameManager, old_game_id: str | None = None):
         pass
 
 
 class PlayerAbstraction(ABC):
     @abstractmethod
-    def get_player(self, player_id: GameManager)->Player:
+    def get_player(self, player_id: int) -> Player:
         pass
 
     @abstractmethod
-    def save_player(self, player_name: str )-> Player:
+    def save_player(self, player_name: str) -> Player:
         pass
 
 
@@ -31,26 +32,19 @@ class GameRepository(FSMAbstraction):
     def __init__(self):
         self.conn = sqlite3.connect(database="gamerepo.db")
 
-    def get_fsm(self, fsm_id: uuid.UUID):
-        request = db.get_game(game_id=fsm_id)
-        if request:
-            return {"game found": f"{request}"}
-        return {"message": "no game found"}
+    def get_fsm(self, fsm_id: str) -> GameManager:
+        return db.get_game(fsm_id)
 
-    def save_fsm(self, fsm_entity: GameManager):
-        try:
-            db.store_game(data=fsm_entity)
-            return {"message": f"{fsm_entity} successfully saved"}
-        except Exception as e:
-            raise e
+    def save_fsm(self, game: GameManager, old_game_id: str | None = None):
+        db.save_game(game, old_game_id)
 
 
 class PlayerRepository(PlayerAbstraction):
     def __init__(self):
         self.conn = sqlite3.connect(database="gamerepo.db")
 
-    def get_player(self, player_id: int):
+    def get_player(self, player_id: int) -> Player:
         return db.get_name(player_id)
 
-    def save_player(self, player_name: str):
-        return db.store_name(player_name)
+    def save_player(self, player_name: str) -> Player:
+        return db.save_name(player_name)

@@ -22,7 +22,7 @@ class Difficulty(Enum):
     MEDIUM = 3
     HARD = 2
 
-    # Add decorator static method for "from_sting", its allows to use methode without exemplar
+    # A decorator "classmethod" for "from_sting", its allows to use methode without exemplar
     @classmethod
     def from_string(cls, level: str):
         match level:
@@ -53,13 +53,14 @@ WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
 @dataclass
 class GameManager:
     id = uuid.uuid4()
-    player_id = 1
+    player_id : int
     state: GameState
     level: Difficulty
     counter = 0
     output = list[str] | None
     selected_word: str = ""
     hint: str = ""
+    game_id :str = ""
     tries_left: int = 0
 
     def start_game(self):
@@ -68,6 +69,7 @@ class GameManager:
             level = WORDS_TO_GUESS.get(self.level)
 
             self.tries_left = self.level.value
+            print(self.tries_left)
             random_word = random.choice(level)
             self.selected_word = random_word.word
             self.hint = random_word.hint
@@ -89,13 +91,15 @@ class GameManager:
 
         if "_" not in self.output:
             self.state = GameState.WON
+            self.tries_left = self.tries_left - self.counter
             # self.player.scores += 1
             return "You won!"
 
         if self.counter >= self.tries_left:
             self.state = GameState.LOST
+            self.tries_left = self.tries_left - self.counter
             # if self.player.scores > 0:
             #     self.player.scores -= 1
             return "Sorry, you lost"
 
-        return f"Amount of guess words left: {self.tries_left - self.counter}"
+        return self.output,f"Amount of guess words left: {self.tries_left - self.counter}"
