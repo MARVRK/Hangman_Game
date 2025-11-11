@@ -14,7 +14,7 @@ class FSMAbstraction(ABC):
         pass
 
     @abstractmethod
-    def save_fsm(self, game: GameManager, old_game_id: str | None = None):
+    def save_fsm(self, game: GameManager):
         pass
 
 
@@ -35,8 +35,8 @@ class GameRepository(FSMAbstraction):
     def get_fsm(self, fsm_id: str) -> GameManager:
         return db.get_game(fsm_id)
 
-    def save_fsm(self, game: GameManager, old_game_id: str | None = None):
-        db.save_game(game, old_game_id)
+    def save_fsm(self, game: GameManager):
+        db.save_game(game)
 
 
 class PlayerRepository(PlayerAbstraction):

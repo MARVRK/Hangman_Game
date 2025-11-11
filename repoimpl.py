@@ -1,6 +1,5 @@
 import sqlite3
-from fsm import GameManager, Player
-
+from fsm import GameManager, Player, GameState, Difficulty
 
 
 class DataBase:
@@ -15,32 +14,33 @@ class DataBase:
         except Exception as e:
             raise f"Database faced an error: {e}"
 
-    # def create_game_table(self):
-    #     try:
-    #         self.cursor.execute('''CREATE TABLE IF NOT EXISTS Games(
-    #                         id TEXT PRIMARY KEY ,
-    #                         player_id INTEGER,
-    #                         guessed_word TEXT,
-    #                         hint TEXT,
-    #                         difficulty_level TEXT,
-    #                         tries_left INTEGER,
-    #                         last_state TEXT,
-    #                         FOREIGN KEY (player_id) references Player(id))
-    #                             ''')
-    #         self.conn.commit()
-    #     except BaseException as e:
-    #         raise e
-    #
-    # def create_player_table(self):
-    #     try:
-    #         self.cursor.execute('''CREATE TABLE IF NOT EXISTS Player(
-    #                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #                             player_name TEXT
-    #                                )''')
-    #
-    #         self.conn.commit()
-    #     except BaseException as e:
-    #         raise e
+    def create_game_table(self):
+        try:
+            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Games(
+                            id TEXT PRIMARY KEY ,
+                            player_id INTEGER,
+                            guessed_word TEXT,
+                            output TEXT,
+                            hint TEXT,
+                            difficulty_level TEXT,
+                            tries_left INTEGER,
+                            last_state TEXT,
+                            FOREIGN KEY (player_id) references Player(id))
+                                ''')
+            self.conn.commit()
+        except BaseException as e:
+            raise e
+
+    def create_player_table(self):
+        try:
+            self.cursor.execute('''CREATE TABLE IF NOT EXISTS Player(
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                player_name TEXT
+                                   )''')
+
+            self.conn.commit()
+        except BaseException as e:
+            raise e
 
     def save_name(self, name):
         self.cursor.execute('''SELECT player_name FROM Player
@@ -72,7 +72,7 @@ class DataBase:
         except BaseException as e:
             raise e
 
-    def save_game(self, data, old_game_id):
+    def save_game(self, data: GameManager):
         id = data.id
         player_id = data.player_id
         word_to_guess = data.selected_word
@@ -80,46 +80,34 @@ class DataBase:
         difficulty_level = data.level.name
         tries_left = data.tries_left
         last_state = data.state.name
+        # converting output list to one single string
+        output = ""
+        for letter in data.output:
+            output += letter
 
         try:
-            if old_game_id is None:
-                self.cursor.execute(''' INSERT INTO Games(
-                                id,
-                                player_id,
-                                guessed_word,
-                                hint,
-                                difficulty_level,
-                                tries_left,
-                                last_state
-                                ) VALUES (?,?,?,?,?,?,?)''',
-                                 (str(id),
-                                            player_id,
-                                            word_to_guess,
-                                            hint,
-                                            difficulty_level,
-                                            tries_left,
-                                            last_state))
-                self.conn.commit()
-            else:
                 self.cursor.execute('''INSERT INTO Games(id,
                                       player_id,
                                       guessed_word,
+                                      output,
                                       hint,
                                       difficulty_level,
                                       tries_left,
                                       last_state)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id)
                     DO UPDATE SET
                         player_id = EXCLUDED.player_id,
                         guessed_word = EXCLUDED.guessed_word,
+                        output = EXCLUDED.output,
                         hint = EXCLUDED.hint,
                         difficulty_level = EXCLUDED.difficulty_level,
                         tries_left = EXCLUDED.tries_left,
                         last_state = EXCLUDED.last_state;
-              ''', (old_game_id,
+              ''', (str(id),
                               player_id,
                               word_to_guess,
+                              output,
                               hint,
                               difficulty_level,
                               tries_left,
@@ -135,13 +123,14 @@ class DataBase:
                                              WHERE id = ? ''',(game_id,))
            export = self.cursor.fetchone()
            if export is not None:
-               return GameManager(game_id=export[0],
+               return GameManager(id=export[0],
                                   player_id=export[1],
-                                  hint=export[3],
                                   selected_word=export[2],
-                                  level=export[4],
-                                  state=export[6],
-                                  tries_left=export[5])
+                                  output=[x for x in export[3]],
+                                  hint=export[4],
+                                  level=Difficulty[export[5]],
+                                  state=GameState[export[7]],
+                                  tries_left=export[6])
            else:
                self.cursor.close()
                return None
@@ -152,5 +141,4 @@ cp = DataBase()
 # cp.create_game_table()
 # cp.create_player_table()
 # print(cp.get_name(id=1))
-# print(cp.get_game(game_id="b98f2da5-d357-4ba0-a44a-a83eba677859"))
-
+# print(cp.get_game(game_id="e93d243e-46bc-41ac-b357-2cde1d90b24b"))

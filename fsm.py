@@ -50,18 +50,28 @@ WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
                                     WordsToGuess(word="python", hint="so slow")]}
 
 
-@dataclass
 class GameManager:
-    id = uuid.uuid4()
-    player_id : int
-    state: GameState
-    level: Difficulty
-    counter = 0
-    output = list[str] | None
-    selected_word: str = ""
-    hint: str = ""
-    game_id :str = ""
-    tries_left: int = 0
+    def __init__(self, player_id: int,
+                 state: GameState,
+                 level: Difficulty,
+                 hint: str = "",
+                 tries_left: int = 0,
+                 selected_word: str = "",
+                 output=list[str] | None,
+                 counter: int = 0,
+                 id = None):
+
+        self.id = id
+        if not self.id:
+            self.id = uuid.uuid4()
+        self.player_id = player_id
+        self.state = state
+        self.level = level
+        self.counter = counter
+        self.output = output
+        self.selected_word = selected_word
+        self.hint = hint
+        self.tries_left = tries_left
 
     def start_game(self):
         if self.state == GameState.IDLE:
@@ -69,7 +79,7 @@ class GameManager:
             level = WORDS_TO_GUESS.get(self.level)
 
             self.tries_left = self.level.value
-            print(self.tries_left)
+
             random_word = random.choice(level)
             self.selected_word = random_word.word
             self.hint = random_word.hint
@@ -102,4 +112,4 @@ class GameManager:
             #     self.player.scores -= 1
             return "Sorry, you lost"
 
-        return self.output,f"Amount of guess words left: {self.tries_left - self.counter}"
+        return self.output, f"Amount of guess words left: {self.tries_left - self.counter}"
