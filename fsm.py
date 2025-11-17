@@ -4,6 +4,7 @@ from enum import auto, Enum
 import random
 
 
+
 @dataclass
 class Player:
     id: int
@@ -54,10 +55,11 @@ class GameManager:
     def __init__(self, player_id: int,
                  state: GameState,
                  level: Difficulty,
+                 output: list[str],
+                 words_to_guess : dict[Difficulty, list[WordsToGuess]] = WORDS_TO_GUESS,
                  hint: str = "",
                  tries_left: int = 0,
                  selected_word: str = "",
-                 output=list[str] | None,
                  counter: int = 0,
                  id = None):
 
@@ -71,12 +73,13 @@ class GameManager:
         self.output = output
         self.selected_word = selected_word
         self.hint = hint
+        self.word_to_guess = words_to_guess
         self.tries_left = tries_left
 
     def start_game(self):
         if self.state == GameState.IDLE:
             # Initialize level what user typed
-            level = WORDS_TO_GUESS.get(self.level)
+            level = self.word_to_guess.get(self.level)
 
             self.tries_left = self.level.value
 
