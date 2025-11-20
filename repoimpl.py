@@ -1,10 +1,12 @@
 import sqlite3
+from typing import List
+
 from fsm import GameManager, Player, GameState, Difficulty
 
 
 class DataBase:
     def __init__(self):
-        self.conn = sqlite3.connect(database="gamerepo.db")
+        self.conn = sqlite3.connect(database="gamerepo.db", check_same_thread=False)
         self.cursor = self.conn.cursor()
 
     def test_connection(self):
@@ -137,7 +139,17 @@ class DataBase:
        except BaseException as e:
            raise e
 
+    def get_games_by_player(self, player_id) -> List[tuple]:
+        try:
+            self.cursor.execute('''SELECT * FROM Games WHERE player_id = ?''',
+                                (player_id,))
+            export = self.cursor.fetchall()
+            return export
+        except BaseException as e:
+            raise e
+
 cp = DataBase()
+cp.get_games_by_player(1)
 # cp.create_game_table()
 # cp.create_player_table()
 # print(cp.get_name(id=1))

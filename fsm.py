@@ -101,18 +101,17 @@ class GameManager:
                     self.output[number] = word
         else:
             self.counter += 1
+            self.tries_left = self.tries_left - self.counter
 
         if "_" not in self.output:
             self.state = GameState.WON
-            self.tries_left = self.tries_left - self.counter
             # self.player.scores += 1
             return "You won!"
 
-        if self.counter >= self.tries_left:
+        if self.counter > self.tries_left:
             self.state = GameState.LOST
-            self.tries_left = self.tries_left - self.counter
             # if self.player.scores > 0:
             #     self.player.scores -= 1
             return "Sorry, you lost"
 
-        return self.output, f"Amount of guess words left: {self.tries_left - self.counter}"
+        return self.output, f"Amount of guess words left: {self.tries_left}"

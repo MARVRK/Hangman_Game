@@ -10,7 +10,6 @@ def create_game_helper()-> GameManager:
                        level=Difficulty.EASY,
                        output=[])
 
-
 def test_start_game():
     game : GameManager = create_game_helper()
     # Given:
@@ -31,15 +30,12 @@ def test_start_game():
 
     assert "IDLE" in str(err.value)
 
-
-
 def test_guess_word_valuerr():
     game: GameManager = create_game_helper()
     with pytest.raises(ValueError) as err:
         game.guess_word("m")
 
     assert "PLAYING" in str(err.value)
-
 
 def test_guess_word_wrong_word():
     # Given:
@@ -77,3 +73,13 @@ def test_guess_word_win():
     assert game.tries_left == Difficulty.EASY.value
     assert result == "You won!"
 
+def test_guess_word_lose():
+    # Given:
+    game: GameManager = create_game_helper()
+    game.start_game()
+    game.tries_left = 0
+    # When:
+    result = game.guess_word(".")
+    # Then:
+    assert game.state == GameState.LOST
+    assert result == "Sorry, you lost"
