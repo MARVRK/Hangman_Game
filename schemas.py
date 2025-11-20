@@ -8,6 +8,5 @@ class CreateGameModel(BaseModel):
     difficulty: str
 
 class ContinueGameModel(BaseModel):
-    player_id: int
-    game_id: int
+    game_id: str
     word: str
