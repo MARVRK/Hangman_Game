@@ -19,12 +19,27 @@ def get_player(player_id: int):
         return {'name': f"{result.player_name}"}
     return f"Player with id {player_id} not found"
 
+
 @app.get("/app/v1/get_statistics")
 def get_statistics(player_id: int):
-    query = player_id.get_stats(player_id)
+    games_won = 0
+    games_lost = 0
+    games_not_finished = 0
+    query = player.get_payer_stats(player_id)
     if query:
-        return query
-    return {f"No games found with id : {player_id}"}
+        for data in query:
+            if data[-1] == "WON":
+                games_won += 1
+            elif data[-1] == "LOST":
+                games_lost += 1
+            elif data[-1] == "PLAYING":
+                games_not_finished += 1
+        return {"total_games": len(query),
+                "games_lost": games_lost,
+                "game_won": games_won,
+                "games_not_finished": games_not_finished}
+
+    return {f"No games found with player_id : {player_id}"}
 
 
 @app.post("/app/v1/create_game")
@@ -56,12 +71,5 @@ def create_player(player_name: PlayerNameModel):
         raise e
 
 
-
 if __name__ == "__main__":
-    uvicorn.run("core:app")
-
-# GET app/v1/get_statistics
-# body :{player: id}
-#   if player:
-#     return {games_played: int, games_won: int, games_lost: int }
-#   return {data: "player not found"}
+    uvicorn.run("web:app")
