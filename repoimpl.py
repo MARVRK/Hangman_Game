@@ -148,8 +148,8 @@ class DataBase:
         except BaseException as e:
             raise e
 
-cp = DataBase()
-cp.get_games_by_player(1)
+# cp = DataBase()
+# print(cp.get_games_by_player(1))
 # cp.create_game_table()
 # cp.create_player_table()
 # print(cp.get_name(id=1))

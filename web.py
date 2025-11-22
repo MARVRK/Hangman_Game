@@ -4,17 +4,20 @@ import uvicorn
 from fastapi import FastAPI
 
 from fsm import GameManager, Difficulty, GameState, Player
-from models import PlayerNameModel, CreateGameModel, ContinueGameModel
-from repo import PlayerRepository, GameRepository
+from schemas import PlayerNameModel, CreateGameModel, ContinueGameModel
+from repo import PlayerRepository, GameRepository, PlayerService, GameService
 
 app = FastAPI()
-player_repo = PlayerRepository()
-game_repo = GameRepository()
 player = Player
 
-@app.get("/app/v1/get_player")
+player_repo = PlayerRepository()
+game_repo = GameRepository()
+prod_player = PlayerService(repo=player_repo)
+prod_game = GameService(repo=game_repo)
+
+@app.get("/app/v1/get_player/")
 def get_player(player_id: int):
-    result = player_repo.get_player(player_id)
+    result = prod_player.get_player(player_id)
     if result:
         return {'name': f"{result.player_name}"}
     return f"Player with id {player_id} not found"
@@ -25,7 +28,7 @@ def get_statistics(player_id: int):
     games_won = 0
     games_lost = 0
     games_not_finished = 0
-    query = player_repo.get_payer_stats(player_id)
+    query = prod_player.get_player_stats(player_id)
     if query:
         for data in query:
             if data[-1] == "WON":
@@ -49,7 +52,7 @@ def create_game(data: CreateGameModel):
                            state=GameState.IDLE,
                            output=[])
     new_game.start_game()
-    game_repo.save_fsm(new_game)
+    prod_game.save_fsm(new_game)
     return {"game_id": new_game.id,
             "game_hint": new_game.hint}
 
@@ -58,13 +61,13 @@ def create_game(data: CreateGameModel):
 def continue_game(data: ContinueGameModel):
     upload_game = game_repo.get_fsm(data.game_id)
     result = upload_game.guess_word(data.word)
-    game_repo.save_fsm(upload_game)
+    prod_game.save_fsm(upload_game)
     return result
 
 
 @app.post("/app/v1/create_player")
 def create_player(player_name: PlayerNameModel):
-     player = player_repo.save_player(player_name.name)
+     player = prod_player.save_player(player_name.name)
      if player:
         return {f"message: player with name {player.player_name} saved to DB with id {player.id}"}
      return {"message": "player already exists"}

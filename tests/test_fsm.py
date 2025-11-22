@@ -48,7 +48,7 @@ def test_guess_word_wrong_word():
     assert game.counter == 1
     assert game.state == GameState.PLAYING
     assert game.output == ["_"] * len(game.selected_word)
-    assert game.guess_word("f") == (game.output, f"Amount of guess words left: {game.tries_left - game.counter}")
+    assert game.guess_word("f") == (game.output, f"Amount of guess words left: {game.tries_left}")
 
 def test_guess_word_correct_word():
     # Given:

@@ -1,6 +1,9 @@
 import sqlite3
 from abc import ABC, abstractmethod
-from typing import Union, List
+from typing import List, Optional
+from dataclasses import dataclass
+
+from pygments.lexer import default
 
 from fsm import GameManager
 from repoimpl import DataBase
@@ -24,7 +27,8 @@ class PlayerAbstraction(ABC):
     def get_player(self, player_id: int) -> Player:
         pass
 
-    def get_payer_stats(self, player_id: int) -> List[tuple]:
+    @abstractmethod
+    def get_player_stats(self, player_id: int) -> List[tuple]:
         pass
 
     @abstractmethod
@@ -50,8 +54,47 @@ class PlayerRepository(PlayerAbstraction):
     def get_player(self, player_id: int) -> Player:
         return db.get_name(player_id)
 
-    def get_payer_stats(self, player_id: int) -> List[tuple]:
+    def get_player_stats(self, player_id: int) -> List[tuple]:
         return db.get_games_by_player(player_id)
 
     def save_player(self, player_name: str) -> Player:
         return db.save_name(player_name)
+
+
+@dataclass
+class MockPlayer(PlayerAbstraction):
+    store: dict[int, Player ]
+    stats_store = [('some_id', 1, 'iphone', '______', 'apple', 'HARD', 0, 'LOST')]
+
+    def get_player(self, player_id: int) -> Optional[Player]:
+        return self.store.get(player_id)
+
+    def get_player_stats(self, player_id: int) -> list[tuple[str, int, str, str, str, str, int, str]]:
+        return self.stats_store
+
+    def save_player(self, player_name: str) -> Player:
+        pass
+
+
+class PlayerService:
+    def __init__(self, repo: PlayerAbstraction):
+        self.repo = repo
+
+    def get_player(self, user_id: int) -> Optional[Player]:
+        return self.repo.get_player(user_id)
+
+    def get_player_stats(self, player_id: int) -> List[tuple]:
+        return self.repo.get_player_stats(player_id)
+
+    def save_player(self, player_name: str) -> Player:
+        return self.repo.save_player(player_name)
+
+class GameService:
+    def __init__(self, repo: FSMAbstraction):
+        self.repo = repo
+
+    def get_fsm(self, fsm_id: str) -> GameManager:
+        return self.repo.get_fsm(fsm_id)
+
+    def save_fsm(self, game: GameManager):
+        self.repo.save_fsm(game)
