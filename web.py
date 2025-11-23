@@ -5,19 +5,29 @@ from fastapi import FastAPI
 
 from fsm import GameManager, Difficulty, GameState, Player
 from schemas import PlayerNameModel, CreateGameModel, ContinueGameModel
-from repo import PlayerRepository, GameRepository, PlayerService, GameService
+from repo import PlayerRepository, GameRepository, MockPlayer, MockGame
 
-app = FastAPI()
 player = Player
 
-player_repo = PlayerRepository()
-game_repo = GameRepository()
-prod_player = PlayerService(repo=player_repo)
-prod_game = GameService(repo=game_repo)
+production_repo_player = PlayerRepository()
+production_repo_fsm = GameRepository()
+
+def create_app(repo_game: GameRepository,
+               repo_player: PlayerRepository) -> FastAPI:
+    application = FastAPI()
+    application.state.repo_game = repo_game
+    application.state.repo_player = repo_player
+    return application
+
+app = create_app(repo_player=production_repo_player, repo_game=production_repo_fsm)
+
+test_repo_player = MockPlayer(store={1:Player(id=1, player_name="Test_Player")})
+test_repo_game = MockGame()
+app =create_app(repo_game=test_repo_game,repo_player=test_repo_player)
 
 @app.get("/app/v1/get_player/")
 def get_player(player_id: int):
-    result = prod_player.get_player(player_id)
+    result = app.state.repo_player.get_player(player_id)
     if result:
         return {'name': f"{result.player_name}"}
     return f"Player with id {player_id} not found"
@@ -28,7 +38,7 @@ def get_statistics(player_id: int):
     games_won = 0
     games_lost = 0
     games_not_finished = 0
-    query = prod_player.get_player_stats(player_id)
+    query = app.state.repo_player.get_player_stats(player_id)
     if query:
         for data in query:
             if data[-1] == "WON":
@@ -52,22 +62,22 @@ def create_game(data: CreateGameModel):
                            state=GameState.IDLE,
                            output=[])
     new_game.start_game()
-    prod_game.save_fsm(new_game)
+    app.state.repo_game.save_fsm(new_game)
     return {"game_id": new_game.id,
             "game_hint": new_game.hint}
 
 
 @app.post("/app/v1/continue_game")
 def continue_game(data: ContinueGameModel):
-    upload_game = game_repo.get_fsm(data.game_id)
+    upload_game = app.state.repo_game.get_fsm(data.game_id)
     result = upload_game.guess_word(data.word)
-    prod_game.save_fsm(upload_game)
+    app.state.repo_game.save_fsm(upload_game)
     return result
 
 
 @app.post("/app/v1/create_player")
 def create_player(player_name: PlayerNameModel):
-     player = prod_player.save_player(player_name.name)
+     player = app.state.repo_player.save_player(player_name.name)
      if player:
         return {f"message: player with name {player.player_name} saved to DB with id {player.id}"}
      return {"message": "player already exists"}

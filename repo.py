@@ -75,26 +75,10 @@ class MockPlayer(PlayerAbstraction):
     def save_player(self, player_name: str) -> Player:
         pass
 
-
-class PlayerService:
-    def __init__(self, repo: PlayerAbstraction):
-        self.repo = repo
-
-    def get_player(self, user_id: int) -> Optional[Player]:
-        return self.repo.get_player(user_id)
-
-    def get_player_stats(self, player_id: int) -> List[tuple]:
-        return self.repo.get_player_stats(player_id)
-
-    def save_player(self, player_name: str) -> Player:
-        return self.repo.save_player(player_name)
-
-class GameService:
-    def __init__(self, repo: FSMAbstraction):
-        self.repo = repo
-
+@dataclass
+class MockGame(FSMAbstraction):
     def get_fsm(self, fsm_id: str) -> GameManager:
-        return self.repo.get_fsm(fsm_id)
+        pass
 
     def save_fsm(self, game: GameManager):
-        self.repo.save_fsm(game)
+        pass
