@@ -63,9 +63,7 @@ class GameManager:
                  counter: int = 0,
                  id = None):
 
-        self.id = id
-        if not self.id:
-            self.id = uuid.uuid4()
+        self.id = id if id is not None else uuid.uuid4()
         self.player_id = player_id
         self.state = state
         self.level = level

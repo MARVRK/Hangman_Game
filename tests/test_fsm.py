@@ -8,7 +8,8 @@ def create_game_helper()-> GameManager:
     return GameManager(player_id=1,
                        state=GameState.IDLE,
                        level=Difficulty.EASY,
-                       output=[])
+                       output=[],
+                       id=None)
 
 def test_start_game():
     game : GameManager = create_game_helper()

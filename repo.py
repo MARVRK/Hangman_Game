@@ -1,11 +1,10 @@
 import sqlite3
+import uuid
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from dataclasses import dataclass
 
-from pygments.lexer import default
-
-from fsm import GameManager
+from fsm import GameManager, GameState, Difficulty, WordsToGuess, WORDS_TO_GUESS
 from repoimpl import DataBase
 from fsm import Player
 
@@ -63,8 +62,9 @@ class PlayerRepository(PlayerAbstraction):
 
 @dataclass
 class MockPlayer(PlayerAbstraction):
-    store: dict[int, Player ]
+    store: dict[int, Player] | None
     stats_store = [('some_id', 1, 'iphone', '______', 'apple', 'HARD', 0, 'LOST')]
+    test_player = Player(id=1, player_name="test_name")
 
     def get_player(self, player_id: int) -> Optional[Player]:
         return self.store.get(player_id)
@@ -73,12 +73,16 @@ class MockPlayer(PlayerAbstraction):
         return self.stats_store
 
     def save_player(self, player_name: str) -> Player:
-        pass
+        return self.test_player
+
 
 @dataclass
 class MockGame(FSMAbstraction):
+    store: dict[str, GameManager] | None
+
     def get_fsm(self, fsm_id: str) -> GameManager:
-        pass
+        return self.store.get(fsm_id)
 
     def save_fsm(self, game: GameManager):
-        pass
+        self.store[game.id] = game
+
