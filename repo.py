@@ -62,9 +62,8 @@ class PlayerRepository(PlayerAbstraction):
 
 @dataclass
 class MockPlayer(PlayerAbstraction):
-    store: dict[int, Player] | None
+    store: Player | None
     stats_store = [('some_id', 1, 'iphone', '______', 'apple', 'HARD', 0, 'LOST')]
-    test_player = Player(id=1, player_name="test_name")
 
     def get_player(self, player_id: int) -> Optional[Player]:
         return self.store.get(player_id)
@@ -73,7 +72,7 @@ class MockPlayer(PlayerAbstraction):
         return self.stats_store
 
     def save_player(self, player_name: str) -> Player:
-        return self.test_player
+        return self.store
 
 
 @dataclass
