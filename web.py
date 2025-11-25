@@ -80,4 +80,4 @@ app_production = create_app(repo_player=production_repo_player,
                             repo_game=production_repo_fsm)
 
 if __name__ == "__main__":
-    uvicorn.run("web:app")
+    uvicorn.run("web:app_production")

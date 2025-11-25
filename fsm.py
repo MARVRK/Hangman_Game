@@ -48,7 +48,7 @@ WORDS_TO_GUESS = {Difficulty.EASY: [WordsToGuess(word="blazing", hint="rust"),
                   Difficulty.MEDIUM: [WordsToGuess(word="digital", hint="signal is analog or ...."),
                                       WordsToGuess(word="iqos", hint="smoke")],
                   Difficulty.HARD: [WordsToGuess(word="iphone", hint="apple"),
-                                    WordsToGuess(word="python", hint="so slow")]}
+                                    WordsToGuess(word="python", hint="so slow")]}git
 
 
 class GameManager:
