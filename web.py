@@ -6,31 +6,27 @@ from fsm import GameManager, Difficulty, GameState, Player
 from schemas import PlayerNameModel, CreateGameModel, ContinueGameModel
 from repo import PlayerRepository, GameRepository
 
-player = Player
-router = APIRouter()
 production_repo_player = PlayerRepository()
 production_repo_fsm = GameRepository()
 
-def create_app(repo_game: GameRepository,
-               repo_player: PlayerRepository) -> FastAPI:
-    application = FastAPI()
-    application.state.repo_game = repo_game
-    application.state.repo_player = repo_player
 
-    @application.get("/app/v1/get_player/")
+def create_router(app: FastAPI) -> APIRouter:
+    router = APIRouter()
+
+    @router.get("/app/v1/get_player/")
     def get_player(player_id: int):
-        result = application.state.repo_player.get_player(player_id)
+        result = app.state.repo_player.get_player(player_id)
         if result:
             return {'name': f"{result.player_name}"}
         return f"Player with id {player_id} not found"
 
 
-    @application.get("/app/v1/get_statistics")
+    @router.get("/app/v1/get_statistics")
     def get_statistics(player_id: int):
         games_won = 0
         games_lost = 0
         games_not_finished = 0
-        query = application.state.repo_player.get_player_stats(player_id)
+        query = app.state.repo_player.get_player_stats(player_id)
         if query:
             for data in query:
                 if data[-1] == "WON":
@@ -47,36 +43,46 @@ def create_app(repo_game: GameRepository,
         return {f"No games found with player_id : {player_id}"}
 
 
-    @application.post("/app/v1/create_game")
+    @router.post("/app/v1/create_game")
     def create_game(data: CreateGameModel):
         new_game = GameManager(player_id=data.player_id,
                                level=Difficulty.from_string(data.difficulty.lower()),
                                state=GameState.IDLE,
                                output=[])
         new_game.start_game()
-        application.state.repo_game.save_fsm(new_game)
+        app.state.repo_game.save_fsm(new_game)
         return {"game_id": new_game.id,
                 "game_hint": new_game.hint}
 
 
-    @application.post("/app/v1/continue_game")
+    @router.post("/app/v1/continue_game")
     def continue_game(data: ContinueGameModel):
-        upload_game = application.state.repo_game.get_fsm(data.game_id)
+        upload_game = app.state.repo_game.get_fsm(data.game_id)
         result = upload_game.guess_word(data.word)
-        application.state.repo_game.save_fsm(upload_game)
+        app.state.repo_game.save_fsm(upload_game)
         return result
 
 
-    @application.post("/app/v1/create_player")
+    @router.post("/app/v1/create_player")
     def create_player(player_name: PlayerNameModel):
-         player = application.state.repo_player.save_player(player_name.name)
+         player = app.state.repo_player.save_player(player_name.name)
          if player:
             return {f"message: player with name {player.player_name} saved to DB with id {player.id}"}
          return {"message": "player already exists"}
 
+    return router
+
+def create_app(repo_game: GameRepository,
+               repo_player: PlayerRepository) -> FastAPI:
+    application = FastAPI()
+    application.state.repo_game = repo_game
+    application.state.repo_player = repo_player
+    router = create_router(application)
+    application.include_router(router)
+
     return application
 
-app_production = create_app(repo_player=production_repo_player,
+app = create_app(repo_player=production_repo_player,
                             repo_game=production_repo_fsm)
 
 if __name__ == "__main__":
